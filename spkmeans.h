@@ -1,5 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
+#define EPS 0
+#define MAX_ITER 300
 
 typedef struct
 {
@@ -20,9 +22,9 @@ typedef struct {
 } InputInfo;
 
 typedef struct {
-    Vector* vector;
-    double value;
-} EigenData;
+    Vector** eigenvectors;
+    double* eigenvalues;
+} MatrixEigenData;
 
 
 int spk(Vector* datapoints,Cluster* clusters, InputInfo info);
