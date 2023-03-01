@@ -2,6 +2,7 @@
 #include <stdio.h>
 #define EPS 0
 #define MAX_ITER 300
+#define MAX_ROTATIONS 100
 
 typedef struct
 {
@@ -22,13 +23,18 @@ typedef struct {
 } InputInfo;
 
 typedef struct {
-    Vector** eigenvectors;
-    double* eigenvalues;
+    double** eigenMatrix;
+    double* eigenValues;
 } MatrixEigenData;
+
+typedef struct {
+    double* vector;
+    double value;
+} EigenData;
 
 
 int spk(Vector* datapoints,Cluster* clusters, InputInfo info);
-double** wam(Vector* datapoints);
-double** ddg(Vector* datapoints);
-double** gl(Vector* datapoints);
-void jacobi(double** a_matrix);
+double** wam(Vector* datapoints, InputInfo* info);
+double** ddg(Vector* datapoints, InputInfo* info);
+double** gl(Vector* datapoints, InputInfo* info);
+MatrixEigenData* jacobi(double** a_matrix, InputInfo* info);

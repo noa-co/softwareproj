@@ -14,6 +14,6 @@ void print_matrix(int** matrix){
 
 }
 
-void print_eigendata(EigenData* eigenData){
+void print_eigendata(MatrixEigenData* eigenData){
     
 }
