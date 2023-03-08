@@ -434,6 +434,44 @@ double** create_U(Vector* datapoints, InputInfo* info, int* k){
     return u_matrix;
 }
 
+int handle_jacobi(char* file_path, InputInfo* info){
+    MatrixEigenData* jacobiResult;
+    double** matrix;
+
+    matrix = parse_matrix(file_path, info);
+    jacobiResult = jacobi(matrix, info);
+    print_eigendata(jacobiResult, info->numPoints);
+    free_matrix(jacobiResult->eigenMatrix, info->numPoints);
+    free(jacobiResult->eigenValues);
+    free(jacobiResult);
+    free(matrix);
+    
+}
+
+int handle_matrix_goal(char* goal, char* file_path, InputInfo* info){
+    Vector* datapoints;
+    double** result_matrix;
+
+    datapoints = parse_datapoints(file_path, info);
+    
+    if(strcmp(goal, "wam") == 0){
+        result_matrix = wam(datapoints, info);
+    }
+    else if(strcmp(goal, "ddg") == 0){
+        result_matrix = ddg(datapoints, info);
+    }
+    else if(strcmp(goal, "lnorm") == 0){
+        result_matrix = gl(datapoints, info);
+    }
+    else{
+        // todo handle invalid goal
+        return;
+    }
+
+    print_matrix(result_matrix, info->numPoints, info->numPoints);
+    free_matrix(result_matrix, info->numPoints);
+}
+
 
 int main(int argc, char* argv[]){
     /*todo
@@ -441,10 +479,27 @@ int main(int argc, char* argv[]){
     free memory used when needed
     check code :(
     */
-    char* file_name="sometestfileineedtomake";
+    InputInfo* info;
     char* goal; 
-
+    char* file_path;
     
+    if (argc != 2)
+    {
+        /* todo handle */
+    }
+
+    goal = argv[1];
+    file_path = argv[2]; 
+    info = (InputInfo*)calloc(1, sizeof(InputInfo));
+    
+    if(strcmp(goal, "jacobi") == 0){
+        handle_jacobi(file_path, info);
+    }
+    else {
+        handle_matrix_goal(goal, file_path, info);
+    }
+    
+    return 0;
     
 }
 
