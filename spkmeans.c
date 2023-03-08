@@ -1,8 +1,6 @@
 #include "spkmeans.h"
 #include <math.h>
 
-#define HASH_SPK 1
-
 double** create_matrix(int r, int c){
     double** matrix;
     int i;
@@ -76,6 +74,8 @@ double** calc_ddg_from_wam(double** wam_matrix, InputInfo* info){
     for(i=0; i<info->numPoints; i++){
         ddg_matrix[i][i] = sum_vector(wam_matrix[i], info->numPoints);
     }
+
+    return ddg_matrix;
 
 }
 
@@ -265,6 +265,26 @@ double** copy_matrix(double** matrix, int dim){
     return cpy;
 }
 
+void transform_negative_eigan(MatrixEigenData* eigan_data, int dim){
+    int i, j;
+    double minus_zero = -0.0;
+
+    for (j = 0; j < dim; j++)
+    {
+        if(eigan_data->eigenValues[j] != minus_zero) {
+            continue;
+        }
+
+        eigan_data->eigenValues[j] = 0.0;
+        for (i = 0; i < dim; i++)
+        {
+            eigan_data->eigenMatrix[i][j] *= -1;
+        }
+        
+    }
+    
+}
+
 MatrixEigenData* jacobi(double** a_matrix, InputInfo* info){
     double **eigenvectors_matrix, **a_cpy;
     int *i, *j, num_rotations=0;
@@ -289,8 +309,8 @@ MatrixEigenData* jacobi(double** a_matrix, InputInfo* info){
     }
     
     matrixEigenData->eigenValues = get_diagonal(a_cpy, info->numPoints);
-    // todo - -0.000 convert eigevector*-1
     matrixEigenData->eigenMatrix = eigenvectors_matrix;
+    transform_negative_eigan(matrixEigenData, info->numPoints);
     free_matrix(a_cpy, info);
     return matrixEigenData; 
 }
@@ -370,14 +390,29 @@ double* get_sorted_eiganvals(EigenData* eigans, int size){
     return eigenvals;
 }
 
-// spk functions todod - not good rn
-int spk(Vector* datapoints,Cluster* clusters, InputInfo* info){
+double** create_U_matrix(EigenData* eigans, int k, InputInfo* info){
+    int i,j;
+    double** u_mat = create_matrix(info->numPoints, k);
+    for (i = 0; i < info->numPoints; i++)
+    {
+        for (j = 0; j < k; j++)
+        {
+            u_mat[i][j] = eigans[j].vector[i];
+        }
+        
+    }
+
+    return u_mat;
+    
+}
+
+double** create_U(Vector* datapoints, InputInfo* info, int* k){
     double **wam_matrix, **ddg_matrix, **lap_matrix;
     MatrixEigenData* matrixEigenData;
     EigenData* eigans;
     double *sorted_eigenvalues;
-    Vector* u_datapoints;
-    int k, kmeans_out;
+    double** u_matrix;
+    int kmeans_out;
 
     wam_matrix = wam(datapoints, info);
     ddg_matrix = calc_ddg_from_wam(wam_matrix, info);
@@ -385,16 +420,18 @@ int spk(Vector* datapoints,Cluster* clusters, InputInfo* info){
     matrixEigenData = jacobi(lap_matrix, info);
     eigans = sort_eignals(matrixEigenData, info->numPoints);
     sorted_eigenvalues = get_sorted_eiganvals(eigans, info->numPoints);
-    k = find_eigengap_heuristic(sorted_eigenvalues, info);
-    // todo - i still dont understand if its the eiganvectors or from L?
-    u_datapoints = get_u_datapoints(eigans, k, info);
+    *k = find_eigengap_heuristic(sorted_eigenvalues, info);
+    u_matrix = create_U_matrix(eigans, *k, info);
     
-    kmeans_out = kmeanspp(u_datapoints, clusters, info, MAX_ITER, EPS);
-    if (kmeans_out == 1){
-        freeMem(info, clusters, datapoints);
-        return 1;
-    }
-    return 0;
+    free_matrix(wam_matrix, info->numPoints);
+    free_matrix(ddg_matrix, info->numPoints);
+    free_matrix(matrixEigenData->eigenMatrix, info->numPoints);
+    free(matrixEigenData->eigenValues);
+    free(matrixEigenData);
+    free(eigans);
+    free(sorted_eigenvalues);
+
+    return u_matrix;
 }
 
 
@@ -408,15 +445,7 @@ int main(int argc, char* argv[]){
     char* goal; 
 
     
-    switch (hash_func(goal))
-    {
-    case HASH_SPK:
-        
-        break;
     
-    default:
-        break;
-    }
 }
 
 
