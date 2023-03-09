@@ -556,7 +556,7 @@ int main(int argc, char* argv[]){
     /*todo
     check code :(
     */
-   
+
     InputInfo info = {0,0,0};
     char* goal; 
     char* file_path;
@@ -570,6 +570,9 @@ int main(int argc, char* argv[]){
 
     goal = argv[1];
     file_path = argv[2]; 
+    // todo delete after testing:
+    goal = "wam";
+    file_path = "./testfiles/spk_0.txt";
     datapoints = parse_datapoints(file_path, &info);
     
     if(strcmp(goal, "jacobi") == 0){
