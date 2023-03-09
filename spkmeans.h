@@ -32,9 +32,51 @@ typedef struct {
     double value;
 } EigenData;
 
+/*basic helper functions*/
+double** create_matrix(int r, int c);
+void free_matrix(double** matrix, int r);
+double sum_vector(double* vec, int size);
+double** create_I_matrix(int dim);
+double* get_diagonal(double** matrix, int dim);
+double** copy_matrix(double** matrix, int dim);
+int find_max_i(double* arr, int size);
 
-int spk(Vector* datapoints,Cluster* clusters, InputInfo info);
+/*eigan vals and vectors helper functions*/
+int compare(const void* a, const void* b);
+EigenData* sort_eignals(MatrixEigenData* matrixEigenData, int size);
+double* calc_eigengaps(double* arr, int size);
+int find_eigengap_heuristic(double* sorted_eigenvalues, InputInfo* info);
+double* get_sorted_eiganvals(EigenData* eigans, int size);
+void transform_negative_eigan(MatrixEigenData* eigan_data, int dim);
+
+/*U , wam , ddg, gl matrixes creation functions*/
+double** create_U_matrix(EigenData* eigans, int k, InputInfo* info);
+double** create_U(Vector* datapoints, InputInfo* info, int* k);
+double calc_weighted_adjacency(Vector x, Vector y, int vec_size);
 double** wam(Vector* datapoints, InputInfo* info);
+double** calc_ddg_from_wam(double** wam_matrix, InputInfo* info);
 double** ddg(Vector* datapoints, InputInfo* info);
+double** calc_L_from_ddgandwam(double** ddg_matrix, double** wam_matrix, InputInfo* info);
 double** gl(Vector* datapoints, InputInfo* info);
+
+/*jacobi methods*/
+double calc_off(double** matrix, int dim);
+void calcvals_rotation_matrix(double** a_matrix, int dim, int* i_val, int* j_val, double* c_val, double* s_val);
+double calc_t(double a_ii, double a_jj, double a_ij);
+int* find_pivot_ij(double** matrix, int dim);
+void transform_v_matrix(double** v_mat, double c, double s, int i, int j, int dim);
+void transform_a_matrix(double** a_mat, double c, double s, int i, int j, int dim);
 MatrixEigenData* jacobi(double** a_matrix, InputInfo* info);
+
+
+/*handling user goal input functions*/
+int handle_jacobi(char* file_path, InputInfo* info);
+int handle_matrix_goal(char* goal, char* file_path, InputInfo* info);
+
+/*IO methods*/
+Vector* parse_datapoints(char* file, InputInfo* info);
+double** parse_matrix(char* file, InputInfo* info);
+void print_double(double n);
+void print_row(double* row, int size);
+void print_matrix(int** matrix, int r, int c);
+void print_eigendata(MatrixEigenData* eigenData, int dim);
