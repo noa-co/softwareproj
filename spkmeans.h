@@ -62,7 +62,7 @@ void transform_negative_eigan(MatrixEigenData* eigan_data, int dim);
 /*U , wam , ddg, gl matrixes creation functions*/
 double** create_U_matrix(EigenData* eigans, int k, InputInfo* info);
 double** create_U(Vector* datapoints, InputInfo* info, int* k);
-double calc_weighted_adjacency(Vector x, Vector y, int vec_size);
+double calc_weighted_adjacency(double* x, double* y, int vec_size);
 double** wam(Vector* datapoints, InputInfo* info);
 double** calc_ddg_from_wam(double** wam_matrix, InputInfo* info);
 double** ddg(Vector* datapoints, InputInfo* info);
