@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #define EPS 0
 #define MAX_ITER 300
 #define MAX_ROTATIONS 100
@@ -70,22 +71,22 @@ double** gl(Vector* datapoints, InputInfo* info);
 
 /*jacobi methods*/
 double calc_off(double** matrix, int dim);
-void calcvals_rotation_matrix(double** a_matrix, int dim, int* i_val, int* j_val, double* c_val, double* s_val);
+int calcvals_rotation_matrix(double** a_matrix, int dim, int* i_val, int* j_val, double* c_val, double* s_val);
 double calc_t(double a_ii, double a_jj, double a_ij);
 int* find_pivot_ij(double** matrix, int dim);
 void transform_v_matrix(double** v_mat, double c, double s, int i, int j, int dim);
 void transform_a_matrix(double** a_mat, double c, double s, int i, int j, int dim);
-MatrixEigenData* jacobi(Vector* a_matrix, InputInfo* info);
+MatrixEigenData* jacobi(Vector* a_matrix, double** a_mat, InputInfo* info);
 
 
 /*handling user goal input functions*/
-void handle_jacobi(Vector* datapoints, InputInfo* info);
-void handle_matrix_goal(char* goal, Vector* datapoints, InputInfo* info);
+int handle_jacobi(Vector* datapoints, InputInfo* info);
+int handle_matrix_goal(char* goal, Vector* datapoints, InputInfo* info);
 
 /*IO printing methods*/
 void print_double(double n);
 void print_row(double* row, int size);
-void print_matrix(int** matrix, int r, int c);
+void print_matrix(double** matrix, int r, int c);
 void print_eigendata(MatrixEigenData* eigenData, int dim);
 
 /*IO parsing datapoints methods*/

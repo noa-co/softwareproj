@@ -181,7 +181,8 @@ void transform_v_matrix(double** v_mat, double c, double s, int i, int j, int di
 
 int* find_pivot_ij(double** matrix, int dim){
     int i,j, max;
-    int max_ij[2];
+    int* max_ij = (int*)calloc(2, sizeof(int));
+    if(max_ij == NULL) return NULL;
 
     max = fabs(matrix[0][0]);
     max_ij[0] = max_ij[1] = 0;
@@ -198,9 +199,8 @@ int* find_pivot_ij(double** matrix, int dim){
             }
         }
         
-        return max_ij;
     }
-    
+    return max_ij;
 }
 
 double** create_I_matrix(int dim){
@@ -228,10 +228,14 @@ double calc_t(double a_ii, double a_jj, double a_ij){
     return t;
 }
 
-void calcvals_rotation_matrix(double** a_matrix, int dim, int* i_val, int* j_val, double* c_val, double* s_val){
+int calcvals_rotation_matrix(double** a_matrix, int dim, int* i_val, int* j_val, double* c_val, double* s_val){
     double c, t, s, **rotation_matrix;
     int i,j;
-    int pivot_ij[2] = find_pivot_ij(a_matrix, dim);
+    int* pivot_ij;
+    
+    pivot_ij = find_pivot_ij(a_matrix, dim);
+    if(pivot_ij == NULL) return -1;
+
     i = pivot_ij[0];
     j = pivot_ij[1];
 
@@ -243,6 +247,7 @@ void calcvals_rotation_matrix(double** a_matrix, int dim, int* i_val, int* j_val
     *j_val = j;
     *c_val = c;
     *s_val = s;
+    return 0;
 }
 
 double calc_off(double** matrix, int dim){
@@ -313,15 +318,23 @@ void transform_negative_eigan(MatrixEigenData* eigan_data, int dim){
     
 }
 
-MatrixEigenData* jacobi(Vector* a_matrix, InputInfo* info){
+MatrixEigenData* jacobi(Vector* a_matrix, double** a_mat, InputInfo* info){
     double **eigenvectors_matrix, **a_cpy;
     int *i, *j, num_rotations=0;
+    int out;
     double *c, *s, eps;
     double a_off, a_new_off, diff_off;
     MatrixEigenData* matrixEigenData = (MatrixEigenData*)calloc(1, sizeof(MatrixEigenData));
 
-    a_cpy = copy_matrix(a_matrix, info->numPoints);
+    /*handling different calls - with vector matrix or double** matrix apropriatly*/
+    if(a_matrix == NULL){
+        a_cpy = copy_matrix(a_matrix, info->numPoints);
+    }
+    else{
+        a_cpy = a_mat;
+    }
     if(a_cpy == NULL) return NULL;
+
 
     eigenvectors_matrix = create_I_matrix(info->numPoints);
     if(eigenvectors_matrix == NULL){
@@ -334,8 +347,13 @@ MatrixEigenData* jacobi(Vector* a_matrix, InputInfo* info){
     diff_off = eps+1; /* just so it goes inside first iteration*/
 
     while(num_rotations< MAX_ROTATIONS && diff_off > eps){
-        calcvals_rotation_matrix(a_cpy, info->numPoints, i, j, c, s);
-        treanform_v_matrix(eigenvectors_matrix, *c, *s, *i, *j,info->numPoints);
+        out = calcvals_rotation_matrix(a_cpy, info->numPoints, i, j, c, s);
+        if(out == -1){
+            free_matrix(a_cpy, info->numPoints);
+            free_matrix(eigenvectors_matrix, info->numPoints);
+            return NULL;
+        }
+        transform_v_matrix(eigenvectors_matrix, *c, *s, *i, *j,info->numPoints);
         transform_a_matrix(a_cpy, *c, *s, *i, *j, info->numPoints);
         a_new_off = calc_off(a_cpy, info->numPoints);
         diff_off = a_off - a_new_off;     
@@ -345,7 +363,7 @@ MatrixEigenData* jacobi(Vector* a_matrix, InputInfo* info){
     
     matrixEigenData->eigenValues = get_diagonal(a_cpy, info->numPoints);
     if(matrixEigenData->eigenValues == NULL){
-        free_matrix(a_cpy, info);
+        free_matrix(a_cpy, info->numPoints);
         free_matrix(eigenvectors_matrix, info->numPoints);
         return NULL;
     }
@@ -419,7 +437,7 @@ int find_eigengap_heuristic(double* sorted_eigenvalues, InputInfo* info){
 
     eigengaps = calc_eigengaps(sorted_eigenvalues, info->numPoints);
     if(eigengaps == NULL){
-        return NULL;
+        return -1;
     }
     k = find_max_i(eigengaps, info->numPoints);
     free(eigengaps);
@@ -471,15 +489,13 @@ double** create_U(Vector* datapoints, InputInfo* info, int* k){
     lap_matrix = gl(datapoints, info);
     if(lap_matrix == NULL) return NULL;
 
-    matrixEigenData = jacobi(lap_matrix, info);
+    matrixEigenData = jacobi(NULL, lap_matrix, info);
     if(matrixEigenData == NULL){
-        free_matrix(lap_matrix, info->numPoints);
         return NULL;
     }
 
     eigans = sort_eignals(matrixEigenData, info->numPoints);
     if(eigans == NULL) {    
-        free_matrix(lap_matrix, info->numPoints);
         free_matrix(matrixEigenData->eigenMatrix, info->numPoints);
         free(matrixEigenData->eigenValues);
         free(matrixEigenData);
@@ -488,7 +504,6 @@ double** create_U(Vector* datapoints, InputInfo* info, int* k){
 
     sorted_eigenvalues = get_sorted_eiganvals(eigans, info->numPoints);
     if(sorted_eigenvalues == NULL) {    
-        free_matrix(lap_matrix, info->numPoints);
         free_matrix(matrixEigenData->eigenMatrix, info->numPoints);
         free(matrixEigenData->eigenValues);
         free(matrixEigenData);
@@ -497,10 +512,16 @@ double** create_U(Vector* datapoints, InputInfo* info, int* k){
     }
     
     *k = find_eigengap_heuristic(sorted_eigenvalues, info);
+    if(*k == -1){
+        free_matrix(matrixEigenData->eigenMatrix, info->numPoints);
+        free(matrixEigenData->eigenValues);
+        free(matrixEigenData);
+        free(eigans);
+        return NULL;
+    }
     info->k = *k;
     u_matrix = create_U_matrix(eigans, *k, info);
     
-    free_matrix(lap_matrix, info->numPoints);
     free_matrix(matrixEigenData->eigenMatrix, info->numPoints);
     free(matrixEigenData->eigenValues);
     free(matrixEigenData);
@@ -513,7 +534,7 @@ double** create_U(Vector* datapoints, InputInfo* info, int* k){
 int handle_jacobi(Vector* datapoints, InputInfo* info){
     MatrixEigenData* jacobiResult;
 
-    jacobiResult = jacobi(datapoints, info);
+    jacobiResult = jacobi(datapoints, NULL, info);
     if(jacobiResult == NULL){
         return -1;
     }
@@ -526,7 +547,6 @@ int handle_jacobi(Vector* datapoints, InputInfo* info){
 }
 
 int handle_matrix_goal(char* goal, Vector* datapoints, InputInfo* info){
-    Vector* datapoints;
     double** result_matrix;
     
     if(strcmp(goal, "wam") == 0){

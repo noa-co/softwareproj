@@ -17,7 +17,7 @@ void print_row(double* row, int size){
     
 }
 
-void print_matrix(int** matrix, int r, int c){
+void print_matrix(double** matrix, int r, int c){
     int i;
     for (i = 0; i < r; i++)
     {
@@ -36,7 +36,7 @@ void print_eigendata(MatrixEigenData* eigenData, int dim){
 Vector* parse_datapoints(char* file_name, InputInfo* info){
     FILE* fp;
 
-    fp = fopen(file_name, 'r');
+    fp = fopen(file_name, "r");
     handle_assert(fp);
     return extract_datapoints(info, fp);
 
