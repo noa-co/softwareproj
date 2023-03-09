@@ -252,14 +252,14 @@ double* get_diagonal(double** matrix, int dim){
     
 }
 
-double** copy_matrix(double** matrix, int dim){
+double** copy_matrix(Vector* vec_matrix, int dim){
     int i, j;
     double** cpy = create_matrix(dim, dim);
 
     for (i = 0; i < dim; i++)
     {
         for (j=0; j<dim; j++){
-            cpy[i][j] = matrix[i][j];
+            cpy[i][j] = vec_matrix[i].point[j];
         }
     }
     return cpy;
@@ -285,7 +285,7 @@ void transform_negative_eigan(MatrixEigenData* eigan_data, int dim){
     
 }
 
-MatrixEigenData* jacobi(double** a_matrix, InputInfo* info){
+MatrixEigenData* jacobi(Vector* a_matrix, InputInfo* info){
     double **eigenvectors_matrix, **a_cpy;
     int *i, *j, num_rotations=0;
     double *c, *s, eps;
@@ -421,6 +421,7 @@ double** create_U(Vector* datapoints, InputInfo* info, int* k){
     eigans = sort_eignals(matrixEigenData, info->numPoints);
     sorted_eigenvalues = get_sorted_eiganvals(eigans, info->numPoints);
     *k = find_eigengap_heuristic(sorted_eigenvalues, info);
+    info->k = *k;
     u_matrix = create_U_matrix(eigans, *k, info);
     
     free_matrix(wam_matrix, info->numPoints);
@@ -434,25 +435,19 @@ double** create_U(Vector* datapoints, InputInfo* info, int* k){
     return u_matrix;
 }
 
-int handle_jacobi(char* file_path, InputInfo* info){
+void handle_jacobi(Vector* datapoints, InputInfo* info){
     MatrixEigenData* jacobiResult;
-    double** matrix;
 
-    matrix = parse_matrix(file_path, info);
-    jacobiResult = jacobi(matrix, info);
+    jacobiResult = jacobi(datapoints, info);
     print_eigendata(jacobiResult, info->numPoints);
     free_matrix(jacobiResult->eigenMatrix, info->numPoints);
     free(jacobiResult->eigenValues);
-    free(jacobiResult);
-    free(matrix);
-    
+    free(jacobiResult);    
 }
 
-int handle_matrix_goal(char* goal, char* file_path, InputInfo* info){
+void handle_matrix_goal(char* goal, Vector* datapoints, InputInfo* info){
     Vector* datapoints;
     double** result_matrix;
-
-    datapoints = parse_datapoints(file_path, info);
     
     if(strcmp(goal, "wam") == 0){
         result_matrix = wam(datapoints, info);
@@ -464,8 +459,7 @@ int handle_matrix_goal(char* goal, char* file_path, InputInfo* info){
         result_matrix = gl(datapoints, info);
     }
     else{
-        // todo handle invalid goal
-        return;
+        handle_error();
     }
 
     print_matrix(result_matrix, info->numPoints, info->numPoints);
@@ -482,6 +476,7 @@ int main(int argc, char* argv[]){
     InputInfo* info;
     char* goal; 
     char* file_path;
+    Vector* datapoints;
     
     if (argc != 2)
     {
@@ -491,13 +486,16 @@ int main(int argc, char* argv[]){
     goal = argv[1];
     file_path = argv[2]; 
     info = (InputInfo*)calloc(1, sizeof(InputInfo));
+    datapoints = parse_datapoints(file_path, info);
     
     if(strcmp(goal, "jacobi") == 0){
-        handle_jacobi(file_path, info);
+        handle_jacobi(datapoints, info);
     }
     else {
-        handle_matrix_goal(goal, file_path, info);
+        handle_matrix_goal(goal, datapoints, info);
     }
+
+    free_datapoints(datapoints);
     
     return 0;
     
