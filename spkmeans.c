@@ -585,14 +585,16 @@ int main(int argc, char* argv[]){
     
     if (argc != 2)
     {
-        handle_error();
+        // todo - uncomment
+        //handle_error();
+
     }
 
     goal = argv[1];
     file_path = argv[2]; 
     // todo delete after testing:
     goal = "wam";
-    file_path = "./testfiles/spk_0.txt";
+    file_path = "C:\\TAU\\MDMH\\software proj\\finalproj\\project\\spk_0.txt";
     datapoints = parse_datapoints(file_path, &info);
     
     if(strcmp(goal, "jacobi") == 0){
