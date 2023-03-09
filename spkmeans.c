@@ -6,8 +6,15 @@ double** create_matrix(int r, int c){
     int i;
 
     matrix = (double**)calloc(r, sizeof(double*));
+    if(matrix == NULL){
+        return NULL;
+    }
+
     for(i=0; i<r; i++){
         matrix[i] = (double*)calloc(c, sizeof(double));
+        if(matrix[i] == NULL){
+            return NULL;
+        }
     }
 
     return matrix;
@@ -57,6 +64,9 @@ double** wam(Vector* datapoints, InputInfo* info){
     int i,j;
     double wij;
     double** matrix = create_matrix(info->numPoints, info->numPoints);
+    if(matrix == NULL){
+        return NULL;
+    }
     
     for(i=0; i<info->numPoints; i++){
         for(j=0; j<i; j++) {
@@ -71,6 +81,10 @@ double** wam(Vector* datapoints, InputInfo* info){
 double** calc_ddg_from_wam(double** wam_matrix, InputInfo* info){
     int i;
     double **ddg_matrix = create_matrix(info->numPoints, info->numPoints);
+    if(ddg_matrix == NULL){
+        return NULL;
+    }
+
     for(i=0; i<info->numPoints; i++){
         ddg_matrix[i][i] = sum_vector(wam_matrix[i], info->numPoints);
     }
@@ -85,10 +99,11 @@ double** ddg(Vector* datapoints, InputInfo* info){
     double **wam_matrix, **ddg_matrix;
 
     wam_matrix = wam(datapoints, info);
+    if(wam == NULL) return NULL;
     ddg_matrix = calc_ddg_from_wam(wam_matrix, info);
 
     free_matrix(wam_matrix, info->numPoints);
-    return ddg_matrix;
+    return ddg_matrix; // returns null if there was an err in calc ddg function
 }
 
 double** calc_L_from_ddgandwam(double** ddg_matrix, double** wam_matrix, InputInfo* info){
@@ -109,7 +124,13 @@ double** gl(Vector* datapoints, InputInfo* info){
     double **res_matrix, **wam_matrix;
     
     wam_matrix = wam(datapoints, info);
+    if(wam_matrix == NULL) return NULL;
     res_matrix = ddg(datapoints, info);
+    if(res_matrix == NULL){
+        free_matrix(wam_matrix, info->numPoints);
+        return NULL;
+    }
+
     res_matrix = calc_L_from_ddgandwam(res_matrix, wam_matrix, info);
     free_matrix(wam_matrix, info->numPoints);
     return res_matrix;
@@ -185,6 +206,9 @@ int* find_pivot_ij(double** matrix, int dim){
 double** create_I_matrix(int dim){
     int i;
     double** mat = create_matrix(dim,dim);
+    if(mat == NULL){
+        return NULL;
+    }
 
     for (i = 0; i < dim; i++)
     {
@@ -241,8 +265,9 @@ double calc_off(double** matrix, int dim){
 double* get_diagonal(double** matrix, int dim){
     int i;
     double* diagonal = (double*)calloc(dim, sizeof(double));
-    // todo - handle all asserts
-    assert(diagonal);
+    if(diagonal == NULL){
+        return NULL;
+    }
 
     for (i = 0; i < dim; i++)
     {
@@ -255,6 +280,9 @@ double* get_diagonal(double** matrix, int dim){
 double** copy_matrix(Vector* vec_matrix, int dim){
     int i, j;
     double** cpy = create_matrix(dim, dim);
+    if(cpy == NULL){
+        return NULL;
+    }
 
     for (i = 0; i < dim; i++)
     {
@@ -293,7 +321,14 @@ MatrixEigenData* jacobi(Vector* a_matrix, InputInfo* info){
     MatrixEigenData* matrixEigenData = (MatrixEigenData*)calloc(1, sizeof(MatrixEigenData));
 
     a_cpy = copy_matrix(a_matrix, info->numPoints);
+    if(a_cpy == NULL) return NULL;
+
     eigenvectors_matrix = create_I_matrix(info->numPoints);
+    if(eigenvectors_matrix == NULL){
+        free_matrix(a_cpy, info->numPoints);
+        return NULL;
+    }
+
     a_off = calc_off(a_cpy, info->numPoints);
     eps = (1.0)*(pow(10, (-5)));
     diff_off = eps+1; /* just so it goes inside first iteration*/
@@ -309,9 +344,15 @@ MatrixEigenData* jacobi(Vector* a_matrix, InputInfo* info){
     }
     
     matrixEigenData->eigenValues = get_diagonal(a_cpy, info->numPoints);
+    if(matrixEigenData->eigenValues == NULL){
+        free_matrix(a_cpy, info);
+        free_matrix(eigenvectors_matrix, info->numPoints);
+        return NULL;
+    }
+
     matrixEigenData->eigenMatrix = eigenvectors_matrix;
     transform_negative_eigan(matrixEigenData, info->numPoints);
-    free_matrix(a_cpy, info);
+    free_matrix(a_cpy, info->numPoints);
     return matrixEigenData; 
 }
 
@@ -328,7 +369,9 @@ int compare(const void* a, const void* b){
 EigenData* sort_eignals(MatrixEigenData* matrixEigenData, int size){
     int i;
     EigenData* eignals = (EigenData*)calloc(size, sizeof(EigenData));
-    assert(eignals);
+    if(eignals == NULL){
+        return NULL;
+    }
 
     for (i = 0; i < size; i++)
     {
@@ -342,7 +385,9 @@ EigenData* sort_eignals(MatrixEigenData* matrixEigenData, int size){
 double* calc_eigengaps(double* arr, int size){
     int i;
     double* eigengaps = (double*)calloc(size-1, sizeof(double));
-    assert(eigengaps);
+    if(eigengaps == NULL){
+        return NULL;
+    }
     
     for (i = 0; i < size-1; i++)
     {
@@ -373,6 +418,9 @@ int find_eigengap_heuristic(double* sorted_eigenvalues, InputInfo* info){
     int k;
 
     eigengaps = calc_eigengaps(sorted_eigenvalues, info->numPoints);
+    if(eigengaps == NULL){
+        return NULL;
+    }
     k = find_max_i(eigengaps, info->numPoints);
     free(eigengaps);
 
@@ -382,6 +430,9 @@ int find_eigengap_heuristic(double* sorted_eigenvalues, InputInfo* info){
 double* get_sorted_eiganvals(EigenData* eigans, int size){
     int i;
     double* eigenvals= (double*)calloc(size, sizeof(double));
+    if(eigenvals == NULL){
+        return NULL;
+    }
 
     for (i = 0; i < size; i++)
     {
@@ -393,6 +444,9 @@ double* get_sorted_eiganvals(EigenData* eigans, int size){
 double** create_U_matrix(EigenData* eigans, int k, InputInfo* info){
     int i,j;
     double** u_mat = create_matrix(info->numPoints, k);
+    if(u_mat == NULL){
+        return NULL;
+    }
     for (i = 0; i < info->numPoints; i++)
     {
         for (j = 0; j < k; j++)
@@ -414,38 +468,64 @@ double** create_U(Vector* datapoints, InputInfo* info, int* k){
     double** u_matrix;
     int kmeans_out;
 
-    wam_matrix = wam(datapoints, info);
-    ddg_matrix = calc_ddg_from_wam(wam_matrix, info);
-    lap_matrix = calc_L_from_ddgandwam(ddg_matrix, wam_matrix, info); // no new matrix allocated
+    lap_matrix = gl(datapoints, info);
+    if(lap_matrix == NULL) return NULL;
+
     matrixEigenData = jacobi(lap_matrix, info);
+    if(matrixEigenData == NULL){
+        free_matrix(lap_matrix, info->numPoints);
+        return NULL;
+    }
+
     eigans = sort_eignals(matrixEigenData, info->numPoints);
+    if(eigans == NULL) {    
+        free_matrix(lap_matrix, info->numPoints);
+        free_matrix(matrixEigenData->eigenMatrix, info->numPoints);
+        free(matrixEigenData->eigenValues);
+        free(matrixEigenData);
+        return NULL;
+    }
+
     sorted_eigenvalues = get_sorted_eiganvals(eigans, info->numPoints);
+    if(sorted_eigenvalues == NULL) {    
+        free_matrix(lap_matrix, info->numPoints);
+        free_matrix(matrixEigenData->eigenMatrix, info->numPoints);
+        free(matrixEigenData->eigenValues);
+        free(matrixEigenData);
+        free(eigans);
+        return NULL;
+    }
+    
     *k = find_eigengap_heuristic(sorted_eigenvalues, info);
     info->k = *k;
     u_matrix = create_U_matrix(eigans, *k, info);
     
-    free_matrix(wam_matrix, info->numPoints);
-    free_matrix(ddg_matrix, info->numPoints);
+    free_matrix(lap_matrix, info->numPoints);
     free_matrix(matrixEigenData->eigenMatrix, info->numPoints);
     free(matrixEigenData->eigenValues);
     free(matrixEigenData);
     free(eigans);
     free(sorted_eigenvalues);
 
-    return u_matrix;
+    return u_matrix; /*will return NULL in case of an error in create u matrix function*/
 }
 
-void handle_jacobi(Vector* datapoints, InputInfo* info){
+int handle_jacobi(Vector* datapoints, InputInfo* info){
     MatrixEigenData* jacobiResult;
 
     jacobiResult = jacobi(datapoints, info);
+    if(jacobiResult == NULL){
+        return -1;
+    }
+
     print_eigendata(jacobiResult, info->numPoints);
     free_matrix(jacobiResult->eigenMatrix, info->numPoints);
     free(jacobiResult->eigenValues);
-    free(jacobiResult);    
+    free(jacobiResult); 
+    return 0;   
 }
 
-void handle_matrix_goal(char* goal, Vector* datapoints, InputInfo* info){
+int handle_matrix_goal(char* goal, Vector* datapoints, InputInfo* info){
     Vector* datapoints;
     double** result_matrix;
     
@@ -459,43 +539,50 @@ void handle_matrix_goal(char* goal, Vector* datapoints, InputInfo* info){
         result_matrix = gl(datapoints, info);
     }
     else{
-        handle_error();
+        return -1;
+    }
+
+    if(result_matrix == NULL){
+        return -1;
     }
 
     print_matrix(result_matrix, info->numPoints, info->numPoints);
     free_matrix(result_matrix, info->numPoints);
+    return 0;
 }
 
 
 int main(int argc, char* argv[]){
     /*todo
-    assert and err handles
-    free memory used when needed
     check code :(
     */
-    InputInfo* info;
+   
+    InputInfo info = {0,0,0};
     char* goal; 
     char* file_path;
     Vector* datapoints;
+    int out;
     
     if (argc != 2)
     {
-        /* todo handle */
+        handle_error();
     }
 
     goal = argv[1];
     file_path = argv[2]; 
-    info = (InputInfo*)calloc(1, sizeof(InputInfo));
-    datapoints = parse_datapoints(file_path, info);
+    datapoints = parse_datapoints(file_path, &info);
     
     if(strcmp(goal, "jacobi") == 0){
-        handle_jacobi(datapoints, info);
+        out = handle_jacobi(datapoints, &info);
     }
     else {
-        handle_matrix_goal(goal, datapoints, info);
+        out = handle_matrix_goal(goal, datapoints, &info);
     }
 
     free_datapoints(datapoints);
+    if(out == -1){
+        handle_error();
+    }
     
     return 0;
     
