@@ -329,7 +329,7 @@ MatrixEigenData* jacobi(Vector* a_matrix, double** a_mat, InputInfo* info){
     MatrixEigenData* matrixEigenData = (MatrixEigenData*)calloc(1, sizeof(MatrixEigenData));
 
     /*handling different calls - with vector matrix or double** matrix apropriatly*/
-    if(a_matrix == NULL){
+    if(a_matrix != NULL){
         a_cpy = copy_matrix(a_matrix, info->numPoints);
     }
     else{
