@@ -22,7 +22,6 @@ typedef struct
 
 typedef struct vector {
     double* point;
-    struct vector* next;
 } Vector;
 
 
@@ -90,10 +89,7 @@ void print_matrix(double** matrix, int r, int c);
 void print_eigendata(MatrixEigenData* eigenData, int dim);
 
 /*IO parsing datapoints methods*/
-void free_datapoints(Vector* datapointsHead);
+void free_datapoints(Vector* datapoints, int num_points);
 Vector* parse_datapoints(char* file_name, InputInfo* info);
-void free_pointvec(PointVec* head);
-double* list_point_to_array(PointVec* head, int pointSize);
-double* get_first_point_and_size(InputInfo*  info, FILE* fp);
-int set_vecpoint(Vector* currVec, double* point, int pointSize);
+void get_point_data(InputInfo*  info, FILE* fp);
 Vector* extract_datapoints(InputInfo* info, FILE* fp);

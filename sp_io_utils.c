@@ -35,163 +35,83 @@ void print_eigendata(MatrixEigenData* eigenData, int dim){
 
 Vector* parse_datapoints(char* file_name, InputInfo* info){
     FILE* fp;
+    Vector* datapoints;
 
     fp = fopen(file_name, "r");
     handle_assert(fp);
-    return extract_datapoints(info, fp);
+    datapoints = extract_datapoints(info, fp);
+    fclose(fp);
+    return;
 
 }
 
-void free_datapoints(Vector* datapointsHead){
+void free_datapoints(Vector* datapoints, int num_points){
     int i;
-    if (datapointsHead != NULL){
-        Vector *curr, *temp;
-        curr = datapointsHead;
+    if (datapoints == NULL) return;
 
-        while (curr != NULL){
-            free(curr->point);
-            temp = curr;
-            curr = curr->next;
-            free(temp);
-        }    
+    for (i = 0; i < num_points; i++)
+    {
+        free(datapoints[i].point);
     }
-}
-
-void free_pointvec(PointVec* head){
-    if (head!=NULL){
-        PointVec *curr, *temp;
-        curr = head;
-
-        while (curr != NULL){
-            temp = curr;
-            curr = curr->next;
-            free(temp);
-        }
-    }
-}
-
-double* list_point_to_array(PointVec* head, int pointSize){
-    int i;
-    PointVec *curr = head;
-    double* point = (double*)calloc(pointSize, sizeof(double));
-
-    if(point == NULL){
-        free_pointvec(head);
-        handle_error();
-    }
+    free(datapoints);
     
-    for (i=0; i< pointSize; i++){
-        point[i] = curr->data;
-        curr = curr->next;
-    }
-    free_pointvec(head);
-    return point;
 }
 
-double* get_first_point_and_size(InputInfo*  info, FILE* fp){
-    PointVec *head, *curr;
-    int pointSize = 0;
+
+void get_point_data(InputInfo*  info, FILE* fp){
     double n;
+    int point_size=0, num_points=0;
     char c;
-
-    head = malloc(sizeof(PointVec));
-    handle_assert(head);
-
-    curr = head;
-    curr->next = NULL;
 
     while (fscanf(fp, "%lf%c", &n, &c) == 2)
     {
-        pointSize++;
-        curr->data = n;
+        if(c==','){
+            point_size++;
+        }
         if(c == '\n'){
+            num_points = 1;
             break;
         }
-        curr->next = malloc(sizeof(PointVec));
-        if(curr->next == NULL){
-            free_pointvec(head);
-            handle_error();
+    }
+
+    while (fscanf(fp, "%lf%c", &n, &c) == 2)
+    {
+        if(c == '\n'){
+            num_points++;
         }
-        curr = curr->next;
-        curr->next = NULL;
+        if(c == EOF){
+            break;
+        }
     }
-    info->pointSize = pointSize;
-    return list_point_to_array(head, pointSize);
-}
-
-int set_vecpoint(Vector* currVec, double* point, int pointSize){
-    currVec->point = (double*)calloc(pointSize, sizeof(double)); 
-    if (currVec-> point == NULL){
-        return -1;
-    }
-
-    memcpy(currVec->point, point, (sizeof(double)*(pointSize)));
-    currVec->next = malloc(sizeof(Vector));
-    if (currVec-> next == NULL){
-        return -1;
-    }
-
-    return 0;
+    info->numPoints = num_points;
+    info->pointSize = point_size;
+    rewind(fp);
+    
 }
 
 Vector* extract_datapoints(InputInfo* info, FILE* fp){
-    Vector *headVec, *currVec;
-    int pointCount , index, pointSize, out;
-    double n;
+    Vector *datapoints;
+    int i, j;
+    double num;
     double* point;
     char c;
 
-    double* firstPoint = get_first_point_and_size(info, fp);
-    pointSize = info->pointSize;
+    get_point_data(info, fp);
+    datapoints = (Vector*)calloc(info->numPoints, sizeof(Vector));
+    handle_assert(datapoints);
     
-    headVec = malloc(sizeof(Vector));
-    if(headVec==NULL){
-        free(firstPoint);
-        handle_error();
-    }
-    currVec = headVec;
-    currVec->next = NULL;
-
-    out = set_vecpoint(currVec, firstPoint, pointSize);
-    free(firstPoint);
-
-    if(out == -1){
-        free_datapoints(headVec);
-        handle_error();
-    }
-
-    currVec = currVec->next;
-    currVec->next = NULL;
-    point = (double*) calloc(pointSize, sizeof(double));
-    if(point == NULL){
-        free_datapoints(headVec);
-        handle_error();
-    }
-
-    pointCount = 1;
-    index = 0;
-
-
-
-    while (fscanf(fp, "%lf%c", &n, &c) == 2)
-    {
-        if (c == '\n'){
-            point[index] = n;
-            if(set_vecpoint(currVec, point, pointSize) == -1){
-                free_datapoints(headVec);
-                handle_error();
-            }
-            currVec = currVec->next;
-            currVec->next = NULL;
-            pointCount++;
-            index = 0;
+    for(i = 0; i < info->numPoints; i++){
+        datapoints[i].point = (double*)calloc(info->pointSize, sizeof(double));
+        if(datapoints[i].point == NULL){
+            free_datapoints(datapoints, i-1);
         }
-        else {
-            point[index] = n;
-            index++;
+
+        for(j = 0; j < info->pointSize; j++){
+            fscanf(fp, "%lf", &num);
+            datapoints[i].point[j] = num;
+            getc(fp);
         }
     }
-    info->numPoints = pointCount;
-    free(point);
-    return headVec;
+    
+    return datapoints;
 }

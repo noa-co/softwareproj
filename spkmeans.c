@@ -65,21 +65,15 @@ double** wam(Vector* datapoints, InputInfo* info){
     int i,j;
     double wij;
     double** matrix = create_matrix(info->numPoints, info->numPoints);
-    Vector *ipoint, *jpoint;
-    ipoint = datapoints;
-
     if(matrix == NULL){
         return NULL;
     }
     
     for(i=0; i<info->numPoints; i++){
-        jpoint = datapoints;
         for(j=0; j<i; j++) {
-            wij = calc_weighted_adjacency(ipoint->point, jpoint->point, info->pointSize);
+            wij = calc_weighted_adjacency(datapoints[i].point, datapoints[j].point, info->pointSize);
             matrix[i][j] = matrix[j][i] = wij;
-            jpoint = jpoint->next;
         }
-        ipoint = ipoint->next;
     }
 
     return matrix;
@@ -299,9 +293,8 @@ double** copy_matrix(Vector* vec_matrix, int dim){
     for (i = 0; i < dim; i++)
     {
         for (j=0; j<dim; j++){
-            cpy[i][j] = vec_matrix->point[j];
+            cpy[i][j] = vec_matrix[i].point[j];
         }
-        vec_matrix = vec_matrix->next;
     }
     return cpy;
 }
