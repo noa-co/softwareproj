@@ -41,7 +41,7 @@ Vector* parse_datapoints(char* file_name, InputInfo* info){
     handle_assert(fp);
     datapoints = extract_datapoints(info, fp);
     fclose(fp);
-    return;
+    return datapoints;
 
 }
 
@@ -69,6 +69,7 @@ void get_point_data(InputInfo*  info, FILE* fp){
             point_size++;
         }
         if(c == '\n'){
+            point_size++;
             num_points = 1;
             break;
         }
@@ -99,7 +100,7 @@ Vector* extract_datapoints(InputInfo* info, FILE* fp){
     get_point_data(info, fp);
     datapoints = (Vector*)calloc(info->numPoints, sizeof(Vector));
     handle_assert(datapoints);
-    
+
     for(i = 0; i < info->numPoints; i++){
         datapoints[i].point = (double*)calloc(info->pointSize, sizeof(double));
         if(datapoints[i].point == NULL){

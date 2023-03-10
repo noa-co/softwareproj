@@ -48,7 +48,7 @@ double sum_vector(double* vec, int size){
 }
 
 double calc_weighted_adjacency(double* x, double* y, int vec_size){
-    double squared_dist, diff;
+    double squared_dist = 0, diff;
     int i;
 
     for (i = 0; i < vec_size; i++)
@@ -605,7 +605,7 @@ int main(int argc, char* argv[]){
         out = handle_matrix_goal(goal, datapoints, &info);
     }
 
-    free_datapoints(datapoints);
+    free_datapoints(datapoints, info.numPoints);
     if(out == -1){
         handle_error();
     }
