@@ -113,6 +113,9 @@ double** calc_L_from_ddgandwam(double** ddg_matrix, double** wam_matrix, InputIn
     for(i=0; i<info->numPoints; i++){
         for(j=0; j<info->numPoints; j++){
             ddg_matrix[i][j] -= wam_matrix[i][j];
+            if(ddg_matrix[i][j] < 0 && ddg_matrix[i][j] > -0.0001){
+                ddg_matrix[i][j] = 0.0;
+            }
         }
     }
 
@@ -594,7 +597,7 @@ int main(int argc, char* argv[]){
     goal = argv[1];
     file_path = argv[2]; 
     // todo delete after testing:
-    goal = "wam";
+    goal = "lnorm";
     file_path = "C:\\TAU\\MDMH\\software proj\\finalproj\\project\\spk_0.txt";
     datapoints = parse_datapoints(file_path, &info);
     
