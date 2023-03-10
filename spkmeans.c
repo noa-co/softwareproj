@@ -556,7 +556,7 @@ int handle_matrix_goal(char* goal, Vector* datapoints, InputInfo* info){
     else if(strcmp(goal, "ddg") == 0){
         result_matrix = ddg(datapoints, info);
     }
-    else if(strcmp(goal, "lnorm") == 0){
+    else if(strcmp(goal, "gl") == 0){
         result_matrix = gl(datapoints, info);
     }
     else{
@@ -594,7 +594,7 @@ int main(int argc, char* argv[]){
     goal = argv[1];
     file_path = argv[2]; 
     /* todo delete after testing:*/
-    goal = "lnorm";
+    goal = "gl";
     file_path = "C:\\TAU\\MDMH\\software proj\\finalproj\\project\\spk_0.txt";
     datapoints = parse_datapoints(file_path, &info);
     
