@@ -9,11 +9,9 @@ void print_row(double* row, int size){
     int i;
     for (i = 0; i < size-1; i++)
     {
-        print_double(row[i]);
-        printf(",");
+        printf("%.4f,", row[i]);
     }
-    print_double(row[size-1]);
-    printf("\n");
+    printf("%.4f\n", row[size-1]);
     
 }
 
@@ -94,8 +92,6 @@ Vector* extract_datapoints(InputInfo* info, FILE* fp){
     Vector *datapoints;
     int i, j;
     double num;
-    double* point;
-    char c;
 
     get_point_data(info, fp);
     datapoints = (Vector*)calloc(info->numPoints, sizeof(Vector));

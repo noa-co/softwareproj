@@ -60,7 +60,7 @@ double calc_weighted_adjacency(double* x, double* y, int vec_size){
     return (exp((-0.5)*squared_dist));
 }
 
-// returns the weighted adj matrix
+/* returns the weighted adj matrix*/
 double** wam(Vector* datapoints, InputInfo* info){
     int i,j;
     double wij;
@@ -94,17 +94,16 @@ double** calc_ddg_from_wam(double** wam_matrix, InputInfo* info){
 
 }
 
-// returns the diagonal degree matrix
+/* returns the diagonal degree matrix*/
 double** ddg(Vector* datapoints, InputInfo* info){
-    int i;
     double **wam_matrix, **ddg_matrix;
 
     wam_matrix = wam(datapoints, info);
-    if(wam == NULL) return NULL;
-    ddg_matrix = calc_ddg_from_wam(wam_matrix, info);
+    if(wam_matrix == NULL) return NULL;
 
+    ddg_matrix = calc_ddg_from_wam(wam_matrix, info);
     free_matrix(wam_matrix, info->numPoints);
-    return ddg_matrix; // returns null if there was an err in calc ddg function
+    return ddg_matrix; /* returns null if there was an err in calc ddg function*/
 }
 
 double** calc_L_from_ddgandwam(double** ddg_matrix, double** wam_matrix, InputInfo* info){
@@ -122,9 +121,8 @@ double** calc_L_from_ddgandwam(double** ddg_matrix, double** wam_matrix, InputIn
     return ddg_matrix;
 }
 
-// return the graph laplacian matrix
+/* return the graph laplacian matrix*/
 double** gl(Vector* datapoints, InputInfo* info){
-    int i,j;
     double **res_matrix, **wam_matrix;
     
     wam_matrix = wam(datapoints, info);
@@ -141,7 +139,7 @@ double** gl(Vector* datapoints, InputInfo* info){
 }
 
 
-//functions for JACOBI starting:
+/*functions for JACOBI starting:*/
 void transform_a_matrix(double** a_mat, double c, double s, int i, int j, int dim){
     double a_ri, a_rj, a_ii, a_jj, a_ij;
     int r;
@@ -233,7 +231,7 @@ double calc_t(double a_ii, double a_jj, double a_ij){
 }
 
 int calcvals_rotation_matrix(double** a_matrix, int dim, int* i_val, int* j_val, double* c_val, double* s_val){
-    double c, t, s, **rotation_matrix;
+    double c, t, s;
     int i,j;
     int* pivot_ij;
     
@@ -324,9 +322,9 @@ void transform_negative_eigan(MatrixEigenData* eigan_data, int dim){
 
 MatrixEigenData* jacobi(Vector* a_matrix, double** a_mat, InputInfo* info){
     double **eigenvectors_matrix, **a_cpy;
-    int *i, *j, num_rotations=0;
+    int i=0, j=0, num_rotations=0;
     int out;
-    double *c, *s, eps;
+    double c=0, s=0, eps;
     double a_off, a_new_off, diff_off;
     MatrixEigenData* matrixEigenData = (MatrixEigenData*)calloc(1, sizeof(MatrixEigenData));
 
@@ -351,14 +349,14 @@ MatrixEigenData* jacobi(Vector* a_matrix, double** a_mat, InputInfo* info){
     diff_off = eps+1; /* just so it goes inside first iteration*/
 
     while(num_rotations< MAX_ROTATIONS && diff_off > eps){
-        out = calcvals_rotation_matrix(a_cpy, info->numPoints, i, j, c, s);
+        out = calcvals_rotation_matrix(a_cpy, info->numPoints, &i, &j, &c, &s);
         if(out == -1){
             free_matrix(a_cpy, info->numPoints);
             free_matrix(eigenvectors_matrix, info->numPoints);
             return NULL;
         }
-        transform_v_matrix(eigenvectors_matrix, *c, *s, *i, *j,info->numPoints);
-        transform_a_matrix(a_cpy, *c, *s, *i, *j, info->numPoints);
+        transform_v_matrix(eigenvectors_matrix, c, s, i, j,info->numPoints);
+        transform_a_matrix(a_cpy, c, s, i, j, info->numPoints);
         a_new_off = calc_off(a_cpy, info->numPoints);
         diff_off = a_off - a_new_off;     
         num_rotations++;
@@ -378,7 +376,7 @@ MatrixEigenData* jacobi(Vector* a_matrix, double** a_mat, InputInfo* info){
     return matrixEigenData; 
 }
 
-// functions for eigengap heuristic:
+/* functions for eigengap heuristic:*/
 int compare(const void* a, const void* b){
     EigenData* d_a = (EigenData*)a;
     EigenData* d_b = (EigenData*)b;
@@ -402,6 +400,7 @@ EigenData* sort_eignals(MatrixEigenData* matrixEigenData, int size){
     }
     
     qsort((void*)eignals,size, sizeof(EigenData), compare);
+    return eignals;
 }
 
 double* calc_eigengaps(double* arr, int size){
@@ -435,7 +434,6 @@ int find_max_i(double* arr, int size){
 }
 
 int find_eigengap_heuristic(double* sorted_eigenvalues, InputInfo* info){
-    double* sorted_values;
     double* eigengaps;
     int k;
 
@@ -483,12 +481,11 @@ double** create_U_matrix(EigenData* eigans, int k, InputInfo* info){
 }
 
 double** create_U(Vector* datapoints, InputInfo* info, int* k){
-    double **wam_matrix, **ddg_matrix, **lap_matrix;
+    double **lap_matrix;
     MatrixEigenData* matrixEigenData;
     EigenData* eigans;
     double *sorted_eigenvalues;
     double** u_matrix;
-    int kmeans_out;
 
     lap_matrix = gl(datapoints, info);
     if(lap_matrix == NULL) return NULL;
@@ -589,14 +586,14 @@ int main(int argc, char* argv[]){
     
     if (argc != 2)
     {
-        // todo - uncomment
-        //handle_error();
+        /* todo - uncomment
+        handle_error();*/
 
     }
 
     goal = argv[1];
     file_path = argv[2]; 
-    // todo delete after testing:
+    /* todo delete after testing:*/
     goal = "lnorm";
     file_path = "C:\\TAU\\MDMH\\software proj\\finalproj\\project\\spk_0.txt";
     datapoints = parse_datapoints(file_path, &info);
