@@ -7,12 +7,6 @@
 #define handle_assert(x) if ((x)==NULL){printf("An Error Has Occurred\n"); exit(1);}
 #define handle_error() {printf("An Error Has Occurred\n"); exit(1);}
 
-typedef struct pointVec {
-    double data;
-    struct pointVec* next;
-} PointVec;
-
-
 typedef struct
 {
     int numPoints;
