@@ -576,6 +576,7 @@ int handle_matrix_goal(char* goal, Vector* datapoints, InputInfo* info){
 int main(int argc, char* argv[]){
     /*todo
     check code :(
+    add documentation above funcs?
     */
 
     InputInfo info = {0,0,0};
