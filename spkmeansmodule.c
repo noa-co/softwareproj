@@ -32,8 +32,6 @@ PyObject* arr_to_pyobject(double* arr, int size){
     return PyList;
 }
 
-// starting kmeans old code:
-// todo decide between this and "datapoint_from_pyobject" function
 Vector* datapoints_from_pyobject(PyObject* points, InputInfo* info){
     int i, j;
     Vector* datapoints;
@@ -166,7 +164,6 @@ static PyObject *fit(PyObject *self, PyObject *args){
     return result_list;
 }
 
-// finished old code kmeans 
 
 static PyObject *get_u(PyObject *self, PyObject *args){
     PyObject *py_datapoints, *result_matrix, *result_tuple;
