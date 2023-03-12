@@ -69,19 +69,19 @@ def handle_matrix_output(result_matrix):
     print_matrix(result_matrix)
         
 def run_goal(goal, datapoints, num_points, point_size, k):
-    match goal:
-        case "spk":
-            handle_spk(datapoints, num_points, point_size, k)
-        case "wam":
-            handle_matrix_output(mykmeanssp.get_wam(datapoints, num_points, point_size))
-        case "ddg":
-            handle_matrix_output(mykmeanssp.get_ddg(datapoints, num_points, point_size))
-        case "gl":
-            handle_matrix_output(mykmeanssp.get_gl(datapoints, num_points, point_size))
-        case "jacobi":
-            handle_jacobi(datapoints, num_points, point_size)
-        case _:
-            exit(1)
+    print(goal)
+    if goal == "spk":
+        handle_spk(datapoints, num_points, point_size, k)
+    elif goal == "wam":
+        handle_matrix_output(mykmeanssp.get_wam(datapoints, num_points, point_size))
+    elif goal == "ddg":
+        handle_matrix_output(mykmeanssp.get_ddg(datapoints, num_points, point_size))
+    elif goal =="gl":
+        handle_matrix_output(mykmeanssp.get_gl(datapoints, num_points, point_size))
+    elif goal == "jacobi":
+        handle_jacobi(datapoints, num_points, point_size)
+    else:
+        exit(1)
 
 
 def main(args):
