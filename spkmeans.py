@@ -1,5 +1,6 @@
 import sys
 import numpy as np
+import traceback
 import pandas as pd
 import mykmeanssp
 
@@ -8,10 +9,10 @@ np.random.seed(0)
 def parse_datapoints(file_name):
     file_data = pd.read_csv(file_name, header=None)
     datapoints = file_data.to_numpy().tolist()
-    return datapoints, data.shape[0], data.shape[1]
+    return datapoints, file_data.shape[0], file_data.shape[1]
 
 def print_row(row):
-    print(",".join('{:.4f}'.format(np.round(num, 4) for num in row)))
+    print(",".join('{:.4f}'.format(np.round(num, 4)) for num in row))
 
 def print_matrix(matrix):
     for row in matrix:
@@ -62,22 +63,21 @@ def handle_spk(datapoints, num_points, point_size, k):
         exit(1)
     print_matrix(clusters)
 
-def handle_matrix_output(result_matrix):
+def handle_matrix_output(result_matrix, num_points):
     if result_matrix == None:
         exit(1)
     result_matrix = np.array(result_matrix).reshape(num_points, num_points) #todo - needed?
     print_matrix(result_matrix)
         
 def run_goal(goal, datapoints, num_points, point_size, k):
-    print(goal)
     if goal == "spk":
         handle_spk(datapoints, num_points, point_size, k)
     elif goal == "wam":
-        handle_matrix_output(mykmeanssp.get_wam(datapoints, num_points, point_size))
+        handle_matrix_output(mykmeanssp.get_wam(datapoints, num_points, point_size), num_points)
     elif goal == "ddg":
-        handle_matrix_output(mykmeanssp.get_ddg(datapoints, num_points, point_size))
+        handle_matrix_output(mykmeanssp.get_ddg(datapoints, num_points, point_size), num_points)
     elif goal =="gl":
-        handle_matrix_output(mykmeanssp.get_gl(datapoints, num_points, point_size))
+        handle_matrix_output(mykmeanssp.get_gl(datapoints, num_points, point_size), num_points)
     elif goal == "jacobi":
         handle_jacobi(datapoints, num_points, point_size)
     else:
@@ -99,6 +99,8 @@ def main(args):
         run_goal(goal, datapoints, num_points, point_size, k)
     except Exception as e:
         print("An Error Has Occurred")
+        print(e)
+        print(traceback.format_exc())  
         exit(1)
 
 
