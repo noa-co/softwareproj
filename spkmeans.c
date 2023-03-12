@@ -1,5 +1,4 @@
 #include "spkmeans.h"
-#include <math.h>
 
 double** create_matrix(int r, int c){
     double** matrix;

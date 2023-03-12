@@ -1,6 +1,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
+
 #define EPS 0
 #define MAX_ITER 300
 #define MAX_ROTATIONS 100
