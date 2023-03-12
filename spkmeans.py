@@ -18,7 +18,7 @@ def print_matrix(matrix):
     for row in matrix:
         print_row(row)
 
-def handle_jacobi(datapoints, num_points, point_size, k):
+def handle_jacobi(datapoints, num_points, point_size):
     eigen_vals, eigen_vecs = mykmeanssp.get_jacobi(datapoints, num_points, point_size)
     if eigen_vals == None or eigen_vecs == None:
         exit(1)
@@ -53,7 +53,7 @@ def handle_spk(datapoints, num_points, point_size, k):
         exit(1)
     if(k == -1):
         k = tmp_k
-    u_matrix = np.array(u_matrix).reshape(n,k)
+    u_matrix = np.array(u_matrix).reshape(num_points,k)
     num_points, point_size = u_matrix.shape
     
     chosen_clusters, chosen_indices = init_clusters_pp(k, u_matrix, indices, num_points)
