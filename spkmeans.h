@@ -87,3 +87,12 @@ void free_datapoints(Vector* datapoints, int num_points);
 Vector* parse_datapoints(char* file_name, InputInfo* info);
 void get_point_data(InputInfo*  info, FILE* fp);
 Vector* extract_datapoints(InputInfo* info, FILE* fp);
+
+/*kmeans algortihm methods*/
+void freeMem(InputInfo info, Cluster* clusters, Vector* datapoints);
+void updateCentroid(Cluster* cluster, int pointSize);
+void resetPoints(Cluster* cluster, int pointSize);
+void addPoint(Cluster* cluster, double* point, int pointSize);
+double getDist(double* p, double* q, int pointSize);
+int findNearestClusterIndex(double* point, Cluster* clusters, InputInfo info);
+int kmeans(int maxIter, Vector* datapoints,Cluster* clusters, InputInfo info, double eps);

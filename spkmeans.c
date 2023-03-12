@@ -419,7 +419,7 @@ double* calc_eigengaps(double* arr, int size){
 }
 
 int find_max_i(double* arr, int size){
-    int i, max_i;
+    int i, max_i = 0;
     double max=-1;
 
     for (i = 0; i < size; i++)

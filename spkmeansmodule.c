@@ -292,7 +292,6 @@ static PyObject *get_gl(PyObject *self, PyObject *args){
 
 static PyObject *get_jacobi(PyObject *self, PyObject *args){
     PyObject *py_matrix, *result_eigenvalues, *result_eigenvectors, *result_tuple;
-    double** gl_matrix;
     int num_points, point_size;
     Vector* matrix_vectors;
     MatrixEigenData* matrix_eigendata;
@@ -325,7 +324,7 @@ static PyObject *get_jacobi(PyObject *self, PyObject *args){
         return NULL;
     }
     
-    result_tuple = PyBuildValue("OO", result_eigenvalues, result_eigenvectors);
+    result_tuple = Py_BuildValue("OO", result_eigenvalues, result_eigenvectors);
     Py_DECREF(result_eigenvalues); /* decref decreases refcount for accurate memory freeing*/
     Py_DECREF(result_eigenvectors);
     return result_tuple;
@@ -336,19 +335,19 @@ static PyMethodDef kmeansMethods[] = {
     {"fit", (PyCFunction)fit, 
     METH_VARARGS,
     PyDoc_STR("kmeans++ algorithm, arguments expected: initialized centroids list and datapoints list")},
-    {"get_u", (PyCFunction)fit, 
+    {"get_u", (PyCFunction)get_u, 
     METH_VARARGS,
     PyDoc_STR("returns U matrix of spk algorithm, arguments expected: datapoints list")},
-    {"get_wam", (PyCFunction)wam, 
+    {"get_wam", (PyCFunction)get_wam, 
     METH_VARARGS,
     PyDoc_STR("returns WAMatrix, arguments expected: datapoints")},
-    {"get_ddg", (PyCFunction)gl, 
+    {"get_ddg", (PyCFunction)get_ddg, 
     METH_VARARGS,
     PyDoc_STR("returns diagonal degree matrix, arguments expected: datapoints")},
-    {"get_gl", (PyCFunction)gl, 
+    {"get_gl", (PyCFunction)get_gl, 
     METH_VARARGS,
     PyDoc_STR("returns graph laplican matrix, arguments expected: datapoints")},
-    {"get_jacobi", (PyCFunction)jacobi, 
+    {"get_jacobi", (PyCFunction)get_jacobi, 
     METH_VARARGS,
     PyDoc_STR("returns eigenvalues and eigenvectors, arguments expected: matrix to do jacobi on")},
     {NULL, NULL, 0, NULL}
@@ -366,4 +365,3 @@ PyMODINIT_FUNC PyInit_mykmeanssp(void){
     return PyModule_Create(&kmeansModule);
 }
 
-// todo tmw :)
