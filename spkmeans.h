@@ -37,6 +37,13 @@ typedef struct {
     double value;
 } EigenData;
 
+
+/*IO printing methods*/
+void print_double(double n);
+void print_row(double* row, int size);
+void print_matrix(double** matrix, int r, int c);
+void print_eigendata(MatrixEigenData* eigenData, int dim);
+
 /*basic helper functions*/
 double** create_matrix(int r, int c);
 void free_matrix(double** matrix, int r);
@@ -65,12 +72,10 @@ double** calc_L_from_ddgandwam(double** ddg_matrix, double** wam_matrix, InputIn
 double** gl(Vector* datapoints, InputInfo* info);
 
 /*jacobi methods*/
-double calc_off(double** matrix, int dim);
-int calcvals_rotation_matrix(double** a_matrix, int dim, int* i_val, int* j_val, double* c_val, double* s_val);
-double calc_t(double a_ii, double a_jj, double a_ij);
-int* find_pivot_ij(double** matrix, int dim);
-void transform_v_matrix(double** v_mat, double c, double s, int i, int j, int dim);
-void transform_a_matrix(double** a_mat, double c, double s, int i, int j, int dim);
+int find_max_off_diag(double **mat, int n, double *max_val, int *k, int *l);
+double off_sq(double **mat, int n);
+double sign(double x);
+int rotate(double **a_mat, double **v_mat, int n, int k, int l);
 MatrixEigenData* jacobi(Vector* a_matrix, double** a_mat, InputInfo* info);
 
 
@@ -78,11 +83,6 @@ MatrixEigenData* jacobi(Vector* a_matrix, double** a_mat, InputInfo* info);
 int handle_jacobi(Vector* datapoints, InputInfo* info);
 int handle_matrix_goal(char* goal, Vector* datapoints, InputInfo* info);
 
-/*IO printing methods*/
-void print_double(double n);
-void print_row(double* row, int size);
-void print_matrix(double** matrix, int r, int c);
-void print_eigendata(MatrixEigenData* eigenData, int dim);
 
 /*IO parsing datapoints methods*/
 void free_datapoints(Vector* datapoints, int num_points);

@@ -1,5 +1,7 @@
 #include "spkmeans.h"
 
+#include <errno.h>
+
 double** create_matrix(int r, int c){
     double** matrix;
     int i;
@@ -111,9 +113,6 @@ double** calc_L_from_ddgandwam(double** ddg_matrix, double** wam_matrix, InputIn
     for(i=0; i<info->numPoints; i++){
         for(j=0; j<info->numPoints; j++){
             ddg_matrix[i][j] -= wam_matrix[i][j];
-            if(ddg_matrix[i][j] < 0 && ddg_matrix[i][j] > -0.0001){
-                ddg_matrix[i][j] = 0.0;
-            }
         }
     }
 
@@ -139,71 +138,6 @@ double** gl(Vector* datapoints, InputInfo* info){
 
 
 /*functions for JACOBI starting:*/
-void transform_a_matrix(double** a_mat, double c, double s, int i, int j, int dim){
-    double a_ri, a_rj, a_ii, a_jj, a_ij;
-    int r;
-    
-    a_ii = a_mat[i][i];
-    a_jj = a_mat[j][j];
-    a_ij = a_mat[i][j];
-
-    for (r = 0; r < dim; r++)
-    {
-        if(r == i || r == j) continue;
-        a_ri = a_mat[r][i];
-        a_rj = a_mat[r][j];
-
-        a_mat[r][i] = a_mat[i][r] = c*a_ri - s*a_rj;
-        a_mat[r][j] = a_mat[j][r] = c*a_rj + s*a_ri;
-    }
-
-    a_mat[i][i] = c*c*a_ii + s*s*a_jj -2*s*c*a_ij;
-    a_mat[j][j] = s*s*a_ii + c*c*a_jj +2*s*c*a_ij;   
-    a_mat[i][j] = a_mat[j][i] = 0; 
-}
-
-/* found online this so called shortcut proven for V matrix 
-just like the one shown in class about a matrix.
-http://phys.uri.edu/nigh/NumRec/bookfpdf/f11-1.pdf (page 4)
-*/
-void transform_v_matrix(double** v_mat, double c, double s, int i, int j, int dim){
-    double v_ri, v_rj;
-    int r;
-
-    for (r = 0; r < dim; r++)
-    {
-        v_ri = v_mat[r][i];
-        v_rj = v_mat[r][j];
-
-        v_mat[r][i] = c*v_ri - s*v_rj;
-        v_mat[r][j] = s*v_ri + c*v_rj;
-    }
-}
-
-int* find_pivot_ij(double** matrix, int dim){
-    int i,j, max;
-    int* max_ij = (int*)calloc(2, sizeof(int));
-    if(max_ij == NULL) return NULL;
-
-    max = fabs(matrix[0][0]);
-    max_ij[0] = max_ij[1] = 0;
-
-    for (i = 0; i < dim; i++)
-    {
-        for (j = 0; j < dim; j++)
-        {
-            if(i==j) continue;
-            if(fabs(matrix[i][j])> max){
-                max = fabs(matrix[i][j]);
-                max_ij[0] = i;
-                max_ij[1] = j;
-            }
-        }
-        
-    }
-    return max_ij;
-}
-
 double** create_I_matrix(int dim){
     int i;
     double** mat = create_matrix(dim,dim);
@@ -220,53 +154,6 @@ double** create_I_matrix(int dim){
     
 }
 
-double calc_t(double a_ii, double a_jj, double a_ij){
-    double theta, t, sign;
-
-    theta = (a_jj - a_ii)/(2*a_ij);
-    sign = (theta < 0) ? -1.0 : 1.0;
-    t = (sign/(fabs(theta)+sqrt((theta*theta + 1))));
-    return t;
-}
-
-int calcvals_rotation_matrix(double** a_matrix, int dim, int* i_val, int* j_val, double* c_val, double* s_val){
-    double c, t, s;
-    int i,j;
-    int* pivot_ij;
-    
-    pivot_ij = find_pivot_ij(a_matrix, dim);
-    if(pivot_ij == NULL) return -1;
-
-    i = pivot_ij[0];
-    j = pivot_ij[1];
-
-    t = calc_t(a_matrix[i][i], a_matrix[j][j], a_matrix[i][j]);
-    c = (1/(sqrt((t*t+1))));
-    s = c*t;
-
-    *i_val = i;
-    *j_val = j;
-    *c_val = c;
-    *s_val = s;
-    return 0;
-}
-
-double calc_off(double** matrix, int dim){
-    double sum=0;
-    int i, j;
-
-    for (i = 0; i < dim; i++)
-    {
-        for (j = 0; j < i; j++)
-        {
-            sum+= pow(matrix[i][j], 2)*2;
-        }
-        
-    }
-
-    return sum;
-    
-}
 
 double* get_diagonal(double** matrix, int dim){
     int i;
@@ -319,12 +206,78 @@ void transform_negative_eigan(MatrixEigenData* eigan_data, int dim){
     
 }
 
+double off_sq(double **mat, int n) {
+    int i, j;
+    double sum = 0.0;
+    for (i = 0; i < n; i++) {
+        for (j = 0; j < i; j++) {
+            sum += 2 * (pow(mat[i][ j], 2));
+        }
+    }
+    return sum;
+}
+
+int find_max_off_diag(double **mat, int n, double *max_val, int *k, int *l) {
+    int i, j;
+    *max_val = 0.0;
+    for (i = 0; i < n; i++) {
+        for (j = i + 1; j < n; j++) {
+            if (fabs(mat[i][j]) >= *max_val) {
+                *max_val = fabs(mat[i][j]);
+                *k = i;
+                *l = j;
+            }
+        }
+    }
+    return 0;
+}
+
+double sign(double x) {
+    return (x < 0) ? -1.0 : 1.0;
+}
+
+/* found online this so called shortcut proven for V matrix 
+just like the one shown in class about a matrix.
+http://phys.uri.edu/nigh/NumRec/bookfpdf/f11-1.pdf (page 4)
+*/
+int rotate(double **a_mat, double **v_mat, int n, int k, int l) {
+    int i, r;
+    double theta, a_kk, a_ll,v_ik, c, t, s, tau;
+    theta = (a_mat[l][l] - a_mat[k][k]) / (2 * a_mat[k][l]);
+    t = sign(theta) / (fabs(theta) + sqrt((theta * theta) + 1.0));
+    c = 1.0 / (sqrt((t * t) + 1.0));
+    s = t * c;
+    tau = s / (1.0 + c);
+
+    a_kk = a_mat[k][k]; 
+    a_ll = a_mat[l][l]; 
+    a_mat[k][k] = ((c * c) * a_kk) + ((s * s) * a_ll) - (2 * s * c * a_mat[k][l]);
+    a_mat[l][l] = ((s * s) * a_kk) + ((c * c) * a_ll) + (2 * s * c * a_mat[k][l]);
+    a_mat[k][l] = a_mat[l][k] = 0.0;
+
+    for (r = 0; r < n; r++) {
+        if (r != k && r != l) {
+            a_kk = a_mat[r][k]; 
+            a_ll = a_mat[r][l]; 
+            a_mat[r][k] = a_mat[k][r] = c * a_kk - s * a_ll;
+            a_mat[r][l] = a_mat[l][r] = c * a_ll + s * a_kk;
+        }
+    }
+
+    for (i = 0; i < n; i++) {
+        v_ik = v_mat[i][k]; 
+        v_mat[i][k] = v_ik - s * (v_mat[i][l] + tau * v_mat[i][k]);
+        v_mat[i][l] = v_mat[i ][l] + s * (v_ik - tau * v_mat[i][l]);
+    }
+
+    return 0;
+}
+
 MatrixEigenData* jacobi(Vector* a_matrix, double** a_mat, InputInfo* info){
     double **eigenvectors_matrix, **a_cpy;
-    int i=0, j=0, num_rotations=0;
-    int out;
-    double c=0, s=0, eps;
-    double a_off, a_new_off, diff_off;
+    int num_rotations=0, k = 0, l = 0;
+    double eps, max_val = 0.0, diff_off;
+    double a_off, a_new_off;
     MatrixEigenData* matrixEigenData = (MatrixEigenData*)calloc(1, sizeof(MatrixEigenData));
 
     /*handling different calls - with vector matrix or double** matrix apropriatly*/
@@ -338,29 +291,26 @@ MatrixEigenData* jacobi(Vector* a_matrix, double** a_mat, InputInfo* info){
 
 
     eigenvectors_matrix = create_I_matrix(info->numPoints);
+    
     if(eigenvectors_matrix == NULL){
         free_matrix(a_cpy, info->numPoints);
         return NULL;
     }
 
-    a_off = calc_off(a_cpy, info->numPoints);
     eps = (1.0)*(pow(10, (-5)));
-    diff_off = eps+1; /* just so it goes inside first iteration*/
+    a_off = off_sq(a_cpy, info->numPoints);
+    diff_off = eps+1; /*just so it will go in first iteration*/
 
-    while(num_rotations< MAX_ROTATIONS && diff_off > eps){
-        out = calcvals_rotation_matrix(a_cpy, info->numPoints, &i, &j, &c, &s);
-        if(out == -1){
-            free_matrix(a_cpy, info->numPoints);
-            free_matrix(eigenvectors_matrix, info->numPoints);
-            return NULL;
-        }
-        transform_v_matrix(eigenvectors_matrix, c, s, i, j,info->numPoints);
-        transform_a_matrix(a_cpy, c, s, i, j, info->numPoints);
-        a_new_off = calc_off(a_cpy, info->numPoints);
-        diff_off = a_off - a_new_off;     
-        num_rotations++;
+    while (num_rotations < MAX_ROTATIONS && diff_off > eps) {
+        find_max_off_diag(a_cpy, info->numPoints, &max_val, &k, &l);
+        rotate(a_cpy, eigenvectors_matrix, info->numPoints, k, l);
+        a_new_off = off_sq(a_cpy, info->numPoints);
+        diff_off = a_off - a_new_off;
         a_off = a_new_off;
+        num_rotations++;
     }
+    
+
     
     matrixEigenData->eigenValues = get_diagonal(a_cpy, info->numPoints);
     if(matrixEigenData->eigenValues == NULL){
@@ -573,18 +523,13 @@ int handle_matrix_goal(char* goal, Vector* datapoints, InputInfo* info){
 
 
 int main(int argc, char* argv[]){
-    /*todo
-    check code :(
-    add documentation above funcs?
-    */
-
     InputInfo info = {0,0,0};
     char* goal; 
     char* file_path;
     Vector* datapoints;
     int out;
     
-    if (argc != 2)
+    if (argc != 3)
     {
         handle_error();
 
@@ -593,6 +538,7 @@ int main(int argc, char* argv[]){
     goal = argv[1];
     file_path = argv[2]; 
     datapoints = parse_datapoints(file_path, &info);
+    
     
     if(strcmp(goal, "jacobi") == 0){
         out = handle_jacobi(datapoints, &info);

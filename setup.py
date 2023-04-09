@@ -5,7 +5,7 @@ module = Extension("mykmeanssp",
                        'spkmeans.c',
                        'spkmeansmodule.c',
                        'sp_io_utils.c',
-                       'sp_kmeansalho.c'
+                       'sp_kmeansalgo.c'
                    ])
 setup(name='mykmeanssp',
       version='1.0',
