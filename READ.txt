@@ -1,0 +1,6 @@
+Ctrl+A
+Ctrl+C
+Go to directory where all relevant files are
+Ctrl+V
+
+run run_tests.py (another readme inside run.tests.py)
