@@ -72,10 +72,9 @@ double** calc_L_from_ddgandwam(double** ddg_matrix, double** wam_matrix, InputIn
 double** gl(Vector* datapoints, InputInfo* info);
 
 /*jacobi methods*/
-int find_max_off_diag(double **mat, int n, double *max_val, int *k, int *l);
-double off_sq(double **mat, int n);
-double sign(double x);
-int rotate(double **a_mat, double **v_mat, int n, int k, int l);
+void find_pivot_kl(double **mat, int n, double *max_val, int *k, int *l);
+double calc_off(double **mat, int n);
+void transform_matrixes(double **a_mat, double **v_mat, int n, int k, int l);
 MatrixEigenData* jacobi(Vector* a_matrix, double** a_mat, InputInfo* info);
 
 

@@ -206,48 +206,45 @@ void transform_negative_eigan(MatrixEigenData* eigan_data, int dim){
     
 }
 
-double off_sq(double **mat, int n) {
+double calc_off(double **mat, int n) {
     int i, j;
-    double sum = 0.0;
+    double sum = 0;
     for (i = 0; i < n; i++) {
         for (j = 0; j < i; j++) {
-            sum += 2 * (pow(mat[i][ j], 2));
+            sum += (pow(mat[i][ j], 2))*2;
         }
     }
     return sum;
 }
 
-int find_max_off_diag(double **mat, int n, double *max_val, int *k, int *l) {
+void find_pivot_kl(double **mat, int n, double *max_val, int *k, int *l) {
     int i, j;
-    *max_val = 0.0;
+    *max_val = 0;
     for (i = 0; i < n; i++) {
         for (j = i + 1; j < n; j++) {
-            if (fabs(mat[i][j]) >= *max_val) {
-                *max_val = fabs(mat[i][j]);
-                *k = i;
-                *l = j;
+            if (fabs(mat[i][j]) < *max_val) {
+                continue;
             }
+            *max_val = fabs(mat[i][j]);
+            *l = j;
+            *k = i;
         }
     }
-    return 0;
-}
-
-double sign(double x) {
-    return (x < 0) ? -1.0 : 1.0;
 }
 
 /* found online this so called shortcut proven for V matrix 
 just like the one shown in class about a matrix.
 http://phys.uri.edu/nigh/NumRec/bookfpdf/f11-1.pdf (page 4)
 */
-int rotate(double **a_mat, double **v_mat, int n, int k, int l) {
+void transform_matrixes(double **a_mat, double **v_mat, int n, int k, int l) {
     int i, r;
-    double theta, a_kk, a_ll,v_ik, c, t, s, tau;
+    double theta, a_kk, a_ll,v_ik,v_il, c, t, s, sign;
+
     theta = (a_mat[l][l] - a_mat[k][k]) / (2 * a_mat[k][l]);
-    t = sign(theta) / (fabs(theta) + sqrt((theta * theta) + 1.0));
+    sign = (theta<0)? -1 : 1;
+    t = sign / (fabs(theta) + sqrt((theta * theta) + 1.0));
     c = 1.0 / (sqrt((t * t) + 1.0));
     s = t * c;
-    tau = s / (1.0 + c);
 
     a_kk = a_mat[k][k]; 
     a_ll = a_mat[l][l]; 
@@ -266,11 +263,11 @@ int rotate(double **a_mat, double **v_mat, int n, int k, int l) {
 
     for (i = 0; i < n; i++) {
         v_ik = v_mat[i][k]; 
-        v_mat[i][k] = v_ik - s * (v_mat[i][l] + tau * v_mat[i][k]);
-        v_mat[i][l] = v_mat[i ][l] + s * (v_ik - tau * v_mat[i][l]);
+        v_il = v_mat[i][l];
+        v_mat[i][k] = c*v_ik - s*v_il;
+        v_mat[i][l] = s*v_ik + c*v_il;
     }
 
-    return 0;
 }
 
 MatrixEigenData* jacobi(Vector* a_matrix, double** a_mat, InputInfo* info){
@@ -298,13 +295,13 @@ MatrixEigenData* jacobi(Vector* a_matrix, double** a_mat, InputInfo* info){
     }
 
     eps = (1.0)*(pow(10, (-5)));
-    a_off = off_sq(a_cpy, info->numPoints);
+    a_off = calc_off(a_cpy, info->numPoints);
     diff_off = eps+1; /*just so it will go in first iteration*/
 
     while (num_rotations < MAX_ROTATIONS && diff_off > eps) {
-        find_max_off_diag(a_cpy, info->numPoints, &max_val, &k, &l);
-        rotate(a_cpy, eigenvectors_matrix, info->numPoints, k, l);
-        a_new_off = off_sq(a_cpy, info->numPoints);
+        find_pivot_kl(a_cpy, info->numPoints, &max_val, &k, &l);
+        transform_matrixes(a_cpy, eigenvectors_matrix, info->numPoints, k, l);
+        a_new_off = calc_off(a_cpy, info->numPoints);
         diff_off = a_off - a_new_off;
         a_off = a_new_off;
         num_rotations++;
