@@ -188,7 +188,7 @@ static PyObject *get_u(PyObject *self, PyObject *args){
         return NULL;
     }
      
-    result_matrix = matrix_to_pyobject(u_matrix, num_points, num_points);
+    result_matrix = matrix_to_pyobject(u_matrix, num_points, k);
     free_matrix(u_matrix, num_points);
     free_datapoints(datapoints, num_points);
     result_tuple = Py_BuildValue("Oi", result_matrix, k);

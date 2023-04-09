@@ -440,6 +440,7 @@ double** create_U(Vector* datapoints, InputInfo* info, int* k){
     if(matrixEigenData == NULL){
         return NULL;
     }
+    /*todo debug from here somethings not good*/
 
     eigans = sort_eignals(matrixEigenData, info->numPoints);
     if(eigans == NULL) {    
