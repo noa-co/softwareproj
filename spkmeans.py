@@ -84,16 +84,16 @@ def handle_spk(datapoints, num_points, point_size, k):
     print("***** u ")
     print_matrix(u_matrix)
 
-    u_matrix = np.array(u_matrix).reshape(num_points,k)
+    u_matrix = np.array(u_matrix).reshape(num_points,tmp_k)
     num_points, point_size = u_matrix.shape
     
-    #chosen_clusters, chosen_indices = init_clusters_pp(k, u_matrix, num_points)
-    #print_indices_chosen(chosen_indices)
-    #clusters = mykmeanssp.fit(chosen_clusters, datapoints, k, num_points, point_size)
-    #if clusters == None:
-    #    exit(1)
-    #print_matrix(clusters)
-    kmeans_pp(u_matrix, k)
+    chosen_clusters, chosen_indices = init_clusters_pp(k, u_matrix, num_points)
+    print_indices_chosen(chosen_indices)
+    clusters = mykmeanssp.fit(chosen_clusters, datapoints, k, num_points, point_size)
+    if clusters == None:
+        exit(1)
+    print_matrix(clusters)
+    #kmeans_pp(u_matrix, k) todo del func maybe
 
 
 def handle_matrix_output(result_matrix, num_points):
