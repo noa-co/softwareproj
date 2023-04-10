@@ -349,49 +349,6 @@ EigenData* sort_eignals(MatrixEigenData* matrixEigenData, int size){
     return eignals;
 }
 
-double* calc_eigengaps(double* arr, int size){
-    int i;
-    double* eigengaps = (double*)calloc(size-1, sizeof(double));
-    if(eigengaps == NULL){
-        return NULL;
-    }
-    
-    for (i = 0; i < size-1; i++)
-    {
-        eigengaps[i] = fabs((arr[i]-arr[i+1]));
-    }
-
-    return eigengaps;
-}
-
-int find_max_i(double* arr, int size){
-    int i, max_i = 0;
-    double max=-1;
-
-    for (i = 0; i < size; i++)
-    {
-        if(max<arr[i]){
-            max = arr[i];
-            max_i = i;
-        }
-    }
-    
-    return max_i;
-}
-
-int find_eigengap_heuristic(double* sorted_eigenvalues, InputInfo* info){
-    double* eigengaps;
-    int k;
-
-    eigengaps = calc_eigengaps(sorted_eigenvalues, info->numPoints);
-    if(eigengaps == NULL){
-        return -1;
-    }
-    k = find_max_i(eigengaps, info->numPoints);
-    free(eigengaps);
-
-    return k;
-}
 
 double* get_sorted_eiganvals(EigenData* eigans, int size){
     int i;
@@ -426,6 +383,23 @@ double** create_U_matrix(EigenData* eigans, int k, InputInfo* info){
     
 }
 
+int find_eigengap_heuristic(double *sorted_eigenvalues, int size) {
+    int i = 0, max_i = 0;
+    double max_eigengap = 0.0, curr_eigengap = 0.0;
+
+    for (i = 0; i < size / 2; i++) {
+        curr_eigengap = fabs(sorted_eigenvalues[i] - sorted_eigenvalues[i + 1]);
+        if (curr_eigengap <= max_eigengap) {
+            continue;
+        }
+        max_i = i;
+        max_eigengap = curr_eigengap;   
+    }
+
+    return (max_i + 1);
+}
+
+
 double** create_U(Vector* datapoints, InputInfo* info, int* k){
     double **lap_matrix;
     MatrixEigenData* matrixEigenData;
@@ -440,7 +414,9 @@ double** create_U(Vector* datapoints, InputInfo* info, int* k){
     if(matrixEigenData == NULL){
         return NULL;
     }
-    /*todo debug from here somethings not good*/
+    printf("jacobi result:\n");
+    print_eigendata(matrixEigenData, info->numPoints);
+    printf("*****\n");
 
     eigans = sort_eignals(matrixEigenData, info->numPoints);
     if(eigans == NULL) {    
@@ -449,8 +425,9 @@ double** create_U(Vector* datapoints, InputInfo* info, int* k){
         free(matrixEigenData);
         return NULL;
     }
-
+    
     sorted_eigenvalues = get_sorted_eiganvals(eigans, info->numPoints);
+    
     if(sorted_eigenvalues == NULL) {    
         free_matrix(matrixEigenData->eigenMatrix, info->numPoints);
         free(matrixEigenData->eigenValues);
@@ -459,7 +436,7 @@ double** create_U(Vector* datapoints, InputInfo* info, int* k){
         return NULL;
     }
     
-    *k = find_eigengap_heuristic(sorted_eigenvalues, info);
+    *k = find_eigengap_heuristic(sorted_eigenvalues, info->numPoints);
     if(*k == -1){
         free_matrix(matrixEigenData->eigenMatrix, info->numPoints);
         free(matrixEigenData->eigenValues);

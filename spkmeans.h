@@ -51,13 +51,11 @@ double sum_vector(double* vec, int size);
 double** create_I_matrix(int dim);
 double* get_diagonal(double** matrix, int dim);
 double** copy_matrix(Vector* datapoints, int dim);
-int find_max_i(double* arr, int size);
 
 /*eigan vals and vectors helper functions*/
 int compare(const void* a, const void* b);
 EigenData* sort_eignals(MatrixEigenData* matrixEigenData, int size);
-double* calc_eigengaps(double* arr, int size);
-int find_eigengap_heuristic(double* sorted_eigenvalues, InputInfo* info);
+int find_eigengap_heuristic(double *sorted_eigenvalues, int size);
 double* get_sorted_eiganvals(EigenData* eigans, int size);
 void transform_negative_eigan(MatrixEigenData* eigan_data, int dim);
 
