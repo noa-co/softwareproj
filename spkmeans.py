@@ -81,8 +81,6 @@ def handle_spk(datapoints, num_points, point_size, k):
         exit(1)
     if(k == -1):
         k = tmp_k
-    print("***** u ")
-    print_matrix(u_matrix)
 
     u_matrix = np.array(u_matrix).reshape(num_points,tmp_k)
     num_points, point_size = u_matrix.shape
@@ -93,7 +91,7 @@ def handle_spk(datapoints, num_points, point_size, k):
     if clusters == None:
         exit(1)
     print_matrix(clusters)
-    #kmeans_pp(u_matrix, k) todo del func maybe
+    #kmeans_pp(u_matrix, k)# todo del func maybe
 
 
 def handle_matrix_output(result_matrix, num_points):
@@ -123,10 +121,12 @@ def main(args):
             k = int(args[1])
             goal = args[2]
             file_name = args[3]
-        else:
+        elif len(args) == 3:
             k = -1
             goal = args[1]
             file_name = args[2]
+        else:
+            exit(1)
 
         datapoints, num_points, point_size = parse_datapoints(file_name)
         run_goal(goal, datapoints, num_points, point_size, k)

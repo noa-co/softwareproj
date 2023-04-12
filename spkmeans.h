@@ -55,7 +55,7 @@ double** copy_matrix(Vector* datapoints, int dim);
 /*eigan vals and vectors helper functions*/
 int compare(const void* a, const void* b);
 EigenData* sort_eignals(MatrixEigenData* matrixEigenData, int size);
-int find_eigengap_heuristic(double *sorted_eigenvalues, int size);
+int find_eigengap_heuristic(double *sorted_eigenvalues, int size); 
 double* get_sorted_eiganvals(EigenData* eigans, int size);
 void transform_negative_eigan(MatrixEigenData* eigan_data, int dim);
 

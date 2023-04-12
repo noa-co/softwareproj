@@ -196,7 +196,6 @@ void transform_negative_eigan(MatrixEigenData* eigan_data, int dim){
             continue;
         }
 
-        eigan_data->eigenValues[j] = 0.0;
         for (i = 0; i < dim; i++)
         {
             eigan_data->eigenMatrix[i][j] *= -1;
@@ -254,7 +253,7 @@ void transform_matrixes(double **a_mat, double **v_mat, int n, int k, int l) {
 
     for (r = 0; r < n; r++) {
         if (r != k && r != l) {
-            a_kk = a_mat[r][k]; 
+            a_kk = a_mat[r][k]; /*its actually a_rk but reused varable, same as next line*/
             a_ll = a_mat[r][l]; 
             a_mat[r][k] = a_mat[k][r] = c * a_kk - s * a_ll;
             a_mat[r][l] = a_mat[l][r] = c * a_ll + s * a_kk;
@@ -280,6 +279,7 @@ MatrixEigenData* jacobi(Vector* a_matrix, double** a_mat, InputInfo* info){
     /*handling different calls - with vector matrix or double** matrix apropriatly*/
     if(a_matrix != NULL){
         a_cpy = copy_matrix(a_matrix, info->numPoints);
+
     }
     else{
         a_cpy = a_mat;
@@ -333,7 +333,7 @@ int compare(const void* a, const void* b){
 }
 
 EigenData* sort_eignals(MatrixEigenData* matrixEigenData, int size){
-    int i;
+    int i,j;
     EigenData* eignals = (EigenData*)calloc(size, sizeof(EigenData));
     if(eignals == NULL){
         return NULL;
@@ -342,7 +342,11 @@ EigenData* sort_eignals(MatrixEigenData* matrixEigenData, int size){
     for (i = 0; i < size; i++)
     {
         eignals[i].value = matrixEigenData->eigenValues[i];
-        eignals[i].vector = matrixEigenData->eigenMatrix[i];
+        
+        eignals[i].vector = (double*)calloc(size, sizeof(double));
+        for(j=0; j<size; j++){
+            eignals[i].vector[j] = matrixEigenData->eigenMatrix[j][i];
+        }
     }
     
     qsort((void*)eignals,size, sizeof(EigenData), compare);
@@ -399,6 +403,14 @@ int find_eigengap_heuristic(double *sorted_eigenvalues, int size) {
     return (max_i + 1);
 }
 
+void free_eigans(EigenData* eigans, int size){
+    int i;
+    for (i=0; i<size; i++){
+        free(eigans[i].vector);
+    }
+    free(eigans);
+}
+
 
 double** create_U(Vector* datapoints, InputInfo* info, int* k){
     double **lap_matrix;
@@ -407,6 +419,7 @@ double** create_U(Vector* datapoints, InputInfo* info, int* k){
     double *sorted_eigenvalues;
     double** u_matrix;
 
+
     lap_matrix = gl(datapoints, info);
     if(lap_matrix == NULL) return NULL;
 
@@ -414,9 +427,7 @@ double** create_U(Vector* datapoints, InputInfo* info, int* k){
     if(matrixEigenData == NULL){
         return NULL;
     }
-    printf("jacobi result:\n");
-    print_eigendata(matrixEigenData, info->numPoints);
-    printf("*****\n");
+
 
     eigans = sort_eignals(matrixEigenData, info->numPoints);
     if(eigans == NULL) {    
@@ -425,6 +436,7 @@ double** create_U(Vector* datapoints, InputInfo* info, int* k){
         free(matrixEigenData);
         return NULL;
     }
+
     
     sorted_eigenvalues = get_sorted_eiganvals(eigans, info->numPoints);
     
@@ -432,7 +444,7 @@ double** create_U(Vector* datapoints, InputInfo* info, int* k){
         free_matrix(matrixEigenData->eigenMatrix, info->numPoints);
         free(matrixEigenData->eigenValues);
         free(matrixEigenData);
-        free(eigans);
+        free_eigans(eigans, info->numPoints);
         return NULL;
     }
     
@@ -441,7 +453,7 @@ double** create_U(Vector* datapoints, InputInfo* info, int* k){
         free_matrix(matrixEigenData->eigenMatrix, info->numPoints);
         free(matrixEigenData->eigenValues);
         free(matrixEigenData);
-        free(eigans);
+        free_eigans(eigans, info->numPoints);
         return NULL;
     }
     info->k = *k;
@@ -450,7 +462,7 @@ double** create_U(Vector* datapoints, InputInfo* info, int* k){
     free_matrix(matrixEigenData->eigenMatrix, info->numPoints);
     free(matrixEigenData->eigenValues);
     free(matrixEigenData);
-    free(eigans);
+    free_eigans(eigans, info->numPoints);
     free(sorted_eigenvalues);
 
     return u_matrix; /*will return NULL in case of an error in create u matrix function*/
