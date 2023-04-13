@@ -24,8 +24,8 @@ def handle_jacobi(datapoints, num_points, point_size):
     if eigen_vals == None or eigen_vecs == None:
         exit(1)
     print_row(eigen_vals)
-    eigen_vecs = np.array(eigen_vecs).reshape(num_points, num_points) # todo - why?
-    print_matrix(eigen_vecs) # todo print eigen_vecs.T - why?
+    eigen_vecs = np.array(eigen_vecs).reshape(num_points, num_points) 
+    print_matrix(eigen_vecs)
 
 def get_dist(p, q):
     sum_part = 0
@@ -49,28 +49,7 @@ def init_clusters_pp(k, datapoints, num_datapoints):
 
     chosen_centroids = datapoints[chosen_cent_indexes].tolist()
     return chosen_centroids, chosen_cent_indexes
-
-def kmeans_pp(vectors, K):
-    """
-    run k means on vectors, select initial centroids using
-    k means++ strategy
-    """
-    N, d = vectors.shape
-    selected = []
-    min_dist = None
-    p = None
-    for Z in range(K):
-        cur_select = np.random.choice(N, p=p)
-        selected.append(cur_select)
-        cur_dist = ((vectors - vectors[cur_select]) ** 2).sum(axis=1)
-        min_dist = cur_dist if min_dist is None else np.minimum(min_dist, cur_dist)
-        p = min_dist / min_dist.sum()
-    c_res = mykmeanssp.fit(vectors[selected].tolist(),vectors.tolist(),K, d, K)
-    final_centroids = np.array(c_res).reshape(K, d)
-    print(','.join([str(i) for i in selected]))
-    print_matrix(final_centroids)
-
-
+    
 def print_indices_chosen(indices):
     print(",".join([str(i) for i in indices]))
 
@@ -87,17 +66,17 @@ def handle_spk(datapoints, num_points, point_size, k):
     
     chosen_clusters, chosen_indices = init_clusters_pp(k, u_matrix, num_points)
     print_indices_chosen(chosen_indices)
-    clusters = mykmeanssp.fit(chosen_clusters, datapoints, k, num_points, point_size)
+
+    clusters = mykmeanssp.fit(chosen_clusters, u_matrix.tolist(), k, num_points, point_size)
     if clusters == None:
         exit(1)
     print_matrix(clusters)
-    #kmeans_pp(u_matrix, k)# todo del func maybe
 
 
 def handle_matrix_output(result_matrix, num_points):
     if result_matrix == None:
         exit(1)
-    result_matrix = np.array(result_matrix).reshape(num_points, num_points) #todo - needed?
+    result_matrix = np.array(result_matrix).reshape(num_points, num_points)
     print_matrix(result_matrix)
         
 def run_goal(goal, datapoints, num_points, point_size, k):
