@@ -448,7 +448,9 @@ double** create_U(Vector* datapoints, InputInfo* info, int* k){
         return NULL;
     }
     
-    *k = find_eigengap_heuristic(sorted_eigenvalues, info->numPoints);
+    if(*k == -1){ /*in case py code didnt get k it will be -1*/
+        *k = find_eigengap_heuristic(sorted_eigenvalues, info->numPoints);
+    }
     if(*k == -1){
         free_matrix(matrixEigenData->eigenMatrix, info->numPoints);
         free(matrixEigenData->eigenValues);

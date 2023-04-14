@@ -172,7 +172,7 @@ static PyObject *get_u(PyObject *self, PyObject *args){
     Vector* datapoints;
     InputInfo info = {0,0,0};
 
-    if(!PyArg_ParseTuple(args, "Oii", &py_datapoints, &num_points, &point_size)){
+    if(!PyArg_ParseTuple(args, "Oiii", &py_datapoints, &num_points, &point_size, &k)){
         return NULL;
     }
     info.numPoints = num_points;

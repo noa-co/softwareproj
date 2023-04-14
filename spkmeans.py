@@ -9,7 +9,7 @@ np.random.seed(0)
 
 def parse_datapoints(file_name):
     file_data = pd.read_csv(file_name, header=None)
-    datapoints = file_data.to_numpy().tolist()
+    datapoints = file_data.values.copy().tolist()
     return datapoints, file_data.shape[0], file_data.shape[1]
 
 def print_row(row):
@@ -55,9 +55,10 @@ def print_indices_chosen(indices):
 
 
 def handle_spk(datapoints, num_points, point_size, k):
-    u_matrix, tmp_k = mykmeanssp.get_u(datapoints, num_points, point_size)
+    u_matrix, tmp_k = mykmeanssp.get_u(datapoints, num_points, point_size, k)
     if u_matrix == None:
         exit(1)
+
     if(k == -1):
         k = tmp_k
 
