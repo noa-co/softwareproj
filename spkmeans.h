@@ -47,6 +47,7 @@ void print_eigendata(MatrixEigenData* eigenData, int dim);
 /*basic helper functions*/
 double** create_matrix(int r, int c);
 void free_matrix(double** matrix, int r);
+void free_eigans(EigenData* eigans, int size);
 double sum_vector(double* vec, int size);
 double** create_I_matrix(int dim);
 double* get_diagonal(double** matrix, int dim);
